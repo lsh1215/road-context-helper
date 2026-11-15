@@ -14,6 +14,16 @@ class EungbongDemoTest {
     @get:Rule val compose = createComposeRule()
     private fun frame() { compose.mainClock.advanceTimeBy(64); compose.waitForIdle() }
 
+    @Test fun unsupportedReplayProfileCannotSilentlyShowYanghwaRoad() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        try {
+            SdkRoadReplaySession(context, "unreviewed-road")
+            fail("An unreviewed profile must not open another road's reference asset")
+        } catch (expected: IllegalArgumentException) {
+            assertTrue(expected.message.orEmpty().contains("Unsupported replay profile"))
+        }
+    }
+
     @Test fun eungbongAssetAndGpsPanelUseCorrectRoadAndHideAfterPass() {
         val session = SdkRoadReplaySession(InstrumentationRegistry.getInstrumentation().targetContext, "eungbong")
         assertEquals("eungbong", session.road.id)

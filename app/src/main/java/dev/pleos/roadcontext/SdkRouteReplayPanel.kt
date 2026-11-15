@@ -44,31 +44,28 @@ fun SdkRouteReplayPanel(state: SdkRouteReplayVisual, dark: Boolean, modifier: Mo
         state.startAlongMeters.isFinite() && state.endAlongMeters.isFinite() &&
         state.endAlongMeters > state.startAlongMeters
     val active = state.visible && state.status == "GUIDANCE" && validProgress
+    val roadCase = RoadReplayCase.fromProfile(state.contextCase)
     BoxWithConstraints(modifier.testTag("sdk_replay_panel")) {
         val landscape = maxWidth >= 1050.dp && maxWidth > maxHeight * 1.3f
         Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (active) {
-                ConnectionHeading(state, ink, secondary, landscape, Modifier.fillMaxWidth())
-                val mangwon = state.contextCase.startsWith("mangwon-")
-                val eungbong = state.contextCase == "eungbong"
-                val closeExit = state.contextCase == "mangwon-b"
-                if (mangwon) Text(
-                    if (closeExit) "실선에서는 차로 유지 · 점선 구간에서 왼쪽 진출 준비"
-                    else if (eungbong) "출구 뒤 진입 차로를 따라 · 앞쪽에서 분홍색 유도선 방면 합류 준비"
+                ConnectionHeading(state, roadCase, ink, secondary, landscape, Modifier.fillMaxWidth())
+                if (roadCase?.isMangwon == true) Text(
+                    if (roadCase == RoadReplayCase.MANGWON_SHORT_EXIT) "실선에서는 차로 유지 · 점선 구간에서 왼쪽 진출 준비"
                     else "진입 차로를 따라 진행하며 앞쪽 합류를 준비하세요",
                     color = ink, fontSize = 22.sp, lineHeight = 30.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().testTag("mangwon_context"))
-                if (closeExit) MangwonRestrictionDiagram(dark, Modifier.weight(1f).fillMaxWidth())
-                else if (eungbong) EungbongPositionDiagram(state, dark, Modifier.weight(1f).fillMaxWidth())
-                else if (state.contextCase == "mangwon-c") LaneEndingDiagram(dark, Modifier.weight(1f).fillMaxWidth(),
-                    sourceMonth = if (eungbong) "2026.01·09" else "2026.07", pinkTarget = eungbong)
-                else ClusterRoadIllustration(dark, Modifier.weight(1f).fillMaxWidth(),
-                    scenario = if (closeExit) ClusterScenario.SHORT_EXIT else ClusterScenario.MERGE,
-                    mirror = closeExit,
-                    notice = if (mangwon) "연결 관계 도식 · 차로 수·간격 축약 · 차량 이동은 설명용" else "연결 구조 예시 · 실제 차로 아님")
-                if (mangwon) Text(
-                    if (closeExit) "합류 전에 출구 쪽을 확인하세요. 이동할 여유가 없으면 다음 경로를 이용하세요."
+                when (roadCase) {
+                    RoadReplayCase.MANGWON_SHORT_EXIT -> MangwonRestrictionDiagram(dark, Modifier.weight(1f).fillMaxWidth())
+                    RoadReplayCase.EUNGBONG -> EungbongPositionDiagram(state, dark, Modifier.weight(1f).fillMaxWidth())
+                    RoadReplayCase.MANGWON_LANE_END -> LaneEndingDiagram(dark, Modifier.weight(1f).fillMaxWidth(),
+                        sourceMonth = "2026.07", pinkTarget = false)
+                    else -> ClusterRoadIllustration(dark, Modifier.weight(1f).fillMaxWidth(),
+                        scenario = ClusterScenario.MERGE, mirror = false, notice = "연결 구조 예시 · 실제 차로 아님")
+                }
+                if (roadCase?.isMangwon == true) Text(
+                    if (roadCase == RoadReplayCase.MANGWON_SHORT_EXIT) "합류 전에 출구 쪽을 확인하세요. 이동할 여유가 없으면 다음 경로를 이용하세요."
                     else "차로 끝과 주변 교통을 확인하며 합류를 준비하세요.",
                     color = secondary, fontSize = 18.sp, lineHeight = 26.sp,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -97,26 +94,26 @@ fun SdkRouteReplayPanel(state: SdkRouteReplayVisual, dark: Boolean, modifier: Mo
 }
 
 @Composable
-private fun ConnectionHeading(state: SdkRouteReplayVisual, ink: Color, secondary: Color,
+private fun ConnectionHeading(state: SdkRouteReplayVisual, roadCase: RoadReplayCase?, ink: Color, secondary: Color,
     wide: Boolean, modifier: Modifier) {
     val remaining = state.junctionAlongMeters?.takeIf { it.isFinite() }?.let { junction ->
         state.alongMeters?.let { junction - it }
     }?.takeIf { it > 0 }
     Column(modifier.testTag("sdk_replay_guidance"), horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(if (state.contextCase == "eungbong") "응봉지하차도 출구 · 분홍색 유도선 합류" else if (state.contextCase.startsWith("mangwon-")) "망원 합류부 · 내부순환로 → 강변북로 구리방향" else "양화대교 북단", color = secondary, fontSize = 18.sp, lineHeight = 26.sp,
+        Text(if (roadCase == RoadReplayCase.EUNGBONG) "응봉지하차도 출구 · 분홍색 유도선 합류" else if (roadCase?.isMangwon == true) "망원 합류부 · 내부순환로 → 강변북로 구리방향" else "양화대교 북단", color = secondary, fontSize = 18.sp, lineHeight = 26.sp,
             fontWeight = FontWeight.Medium)
         val message = if (remaining == null) "본선 연결 구간" else
             "${(remaining / 10).roundToInt().coerceAtLeast(1) * 10}m 앞 · 본선 연결"
-        val contextualMessage = when (state.contextCase) {
-            "mangwon-b" -> if (remaining != null) "합류 뒤 가까운 왼쪽 출구 · 미리 준비" else "양화대교 왼쪽 진출까지 연결 확인"
-            "eungbong" -> when {
-                state.secondLaneEndToMeters != null && state.alongMeters!! > state.secondLaneEndToMeters -> "두 진입 차로의 합류 구간을 지났습니다"
-                state.laneEndToMeters != null && state.alongMeters!! > state.laneEndToMeters -> "남은 진입 차로도 앞에서 끝납니다"
+        val contextualMessage = when (roadCase) {
+            RoadReplayCase.MANGWON_SHORT_EXIT -> if (remaining != null) "합류 뒤 가까운 왼쪽 출구 · 미리 준비" else "양화대교 왼쪽 진출까지 연결 확인"
+            RoadReplayCase.EUNGBONG -> when {
+                state.secondLaneEndToMeters != null && (state.alongMeters ?: Double.NEGATIVE_INFINITY) > state.secondLaneEndToMeters -> "두 진입 차로의 합류 구간을 지났습니다"
+                state.laneEndToMeters != null && (state.alongMeters ?: Double.NEGATIVE_INFINITY) > state.laneEndToMeters -> "남은 진입 차로도 앞에서 끝납니다"
                 remaining == null || remaining <= 60 -> "먼저 오른쪽 진입 차로가 끝납니다"
                 else -> "출구 뒤에도 진입 차로가 이어집니다"
             }
-            "mangwon-c" -> if (remaining != null) "진입 차로는 앞까지 이어집니다" else "앞에서 차로가 끝나며 본선에 연결"
+            RoadReplayCase.MANGWON_LANE_END -> if (remaining != null) "진입 차로는 앞까지 이어집니다" else "앞에서 차로가 끝나며 본선에 연결"
             else -> message
         }
         Text(contextualMessage, color = ink, fontSize = if (wide) 36.sp else 30.sp,

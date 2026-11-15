@@ -138,24 +138,17 @@ internal fun RoadUiState.approvedDiagram(): DiagramModel? {
                 verticalArrangement = Arrangement.spacedBy(if (tight) 16.dp else 24.dp)) {
                 Header(state, palette, inlineHeader)
                 GuidanceStatus(state, palette, wide)
-                val replay=state.sdkReplay
-                if(replay!=null) SdkRouteReplayPanel(replay,state.dark,Modifier.weight(1f).fillMaxWidth())
-                else GuidanceContent(state, palette, wide, Modifier.weight(1f).fillMaxWidth())
+                GuidanceContent(state, palette, wide, Modifier.weight(1f).fillMaxWidth())
                 if (state.settingsAllowed) {
-                    if(state.sdkReplay!=null) Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(12.dp)) {
-                        Action("시험 다시 준비","sdk_restart",{onSdkReplay?.invoke()},palette,Modifier.weight(1f),true)
-                        Action("시험 종료","sdk_exit",onLive,palette,Modifier.weight(1f))
-                    } else {
-                        ParkedActions(state, palette, wide, tight, onDemo, onLive, onPlay, onNext, onReset, onTheme)
-                        if (BuildConfig.DEBUG && onClusterDemo != null && !state.permissionRequestPending)
-                            TextButton(onClick = onClusterDemo, modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp).testTag("cluster_demo")) {
-                                Text("도로 상황 데모", fontSize = 20.sp)
-                            }
-                        if(BuildConfig.DEBUG && onSdkReplay!=null && !state.simulation && !state.setup)
-                            TextButton(onClick=onSdkReplay,modifier=Modifier.fillMaxWidth().heightIn(min=56.dp).testTag("sdk_replay")) {
-                                Text("실도로 GPS 시험",fontSize=20.sp)
-                            }
-                    }
+                    ParkedActions(state, palette, wide, tight, onDemo, onLive, onPlay, onNext, onReset, onTheme)
+                    if (BuildConfig.DEBUG && onClusterDemo != null && !state.permissionRequestPending)
+                        TextButton(onClick = onClusterDemo, modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp).testTag("cluster_demo")) {
+                            Text("도로 상황 데모", fontSize = 20.sp)
+                        }
+                    if(BuildConfig.DEBUG && onSdkReplay!=null && !state.simulation && !state.setup)
+                        TextButton(onClick=onSdkReplay,modifier=Modifier.fillMaxWidth().heightIn(min=56.dp).testTag("sdk_replay")) {
+                            Text("실도로 GPS 시험",fontSize=20.sp)
+                        }
                 } else if (!tight) {
                     Text("주행 중에는 구조 안내만 표시합니다", color = palette.secondary, fontSize = 20.sp)
                 }

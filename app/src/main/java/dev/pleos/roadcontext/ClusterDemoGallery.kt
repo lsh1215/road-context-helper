@@ -28,10 +28,13 @@ internal fun ClusterDemoGallery(
     onSdkReplay: (() -> Unit)?,
     initialProfile: String? = null,
 ) {
-    var mangwon by rememberSaveable(initialProfile) { mutableStateOf(initialProfile == "mangwon-b") }
-    var laneEndingProfile by rememberSaveable(initialProfile) { mutableStateOf(initialProfile?.takeIf { it == "mangwon-c" || it == "eungbong" }) }
-    val laneEnding = laneEndingProfile != null
-    val eungbong = laneEndingProfile == "eungbong"
+    var roadProfile by rememberSaveable(initialProfile) {
+        mutableStateOf(RoadReplayCase.fromProfile(initialProfile.orEmpty())?.takeUnless { it == RoadReplayCase.YANGHWA }?.profile)
+    }
+    val roadCase = roadProfile?.let(RoadReplayCase::fromProfile)
+    val mangwon = roadCase == RoadReplayCase.MANGWON_SHORT_EXIT
+    val laneEnding = roadCase == RoadReplayCase.MANGWON_LANE_END || roadCase == RoadReplayCase.EUNGBONG
+    val eungbong = roadCase == RoadReplayCase.EUNGBONG
     var selected by rememberSaveable { mutableStateOf(ClusterScenario.SHORT_EXIT.id) }
     var stage by rememberSaveable { mutableIntStateOf(1) }
     var tour by rememberSaveable { mutableStateOf(false) }
@@ -63,17 +66,17 @@ internal fun ClusterDemoGallery(
             return@Column
         }
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            FilterChip(selected = eungbong, onClick = { laneEndingProfile = "eungbong"; mangwon = false; stage = 1; tour = false },
+            FilterChip(selected = eungbong, onClick = { roadProfile = RoadReplayCase.EUNGBONG.profile; stage = 1; tour = false },
                 label = { Text("응봉 분홍색 합류", fontSize = 18.sp) },
                 modifier = Modifier.heightIn(min = 76.dp).testTag("case_eungbong_lane_end"))
-            FilterChip(selected = laneEnding && !eungbong, onClick = { laneEndingProfile = "mangwon-c"; mangwon = false; stage = 1; tour = false },
+            FilterChip(selected = roadCase == RoadReplayCase.MANGWON_LANE_END, onClick = { roadProfile = RoadReplayCase.MANGWON_LANE_END.profile; stage = 1; tour = false },
                 label = { Text("망원 차로 끝", fontSize = 18.sp) },
                 modifier = Modifier.heightIn(min = 76.dp).testTag("case_mangwon_lane_end"))
-            FilterChip(selected = mangwon, onClick = { laneEndingProfile = null; mangwon = true; stage = 1; tour = false },
+            FilterChip(selected = mangwon, onClick = { roadProfile = RoadReplayCase.MANGWON_SHORT_EXIT.profile; stage = 1; tour = false },
                 label = { Text("망원 실선·점선", fontSize = 18.sp) },
                 modifier = Modifier.heightIn(min = 76.dp).testTag("case_mangwon_markings"))
             ClusterScenario.entries.forEach { item ->
-                FilterChip(selected = !mangwon && !laneEnding && scenario == item, onClick = { laneEndingProfile = null; mangwon = false; selected = item.id; stage = 1; tour = false },
+                FilterChip(selected = roadCase == null && scenario == item, onClick = { roadProfile = null; selected = item.id; stage = 1; tour = false },
                     label = { Text(item.label, fontSize = 18.sp) },
                     modifier = Modifier.heightIn(min = 76.dp).testTag("case_${item.id}"))
             }
@@ -105,7 +108,7 @@ internal fun ClusterDemoGallery(
             }, modifier = Modifier.fillMaxWidth().padding(top = 6.dp), textAlign = TextAlign.Center,
                 fontSize = 18.sp, color = secondary)
             if (eungbong) EungbongGalleryDiagram(dark, playing && stage == 1, Modifier.weight(1f).fillMaxWidth())
-            else if (laneEnding) LaneEndingDiagram(dark, Modifier.weight(1f).fillMaxWidth(), animate = playing && stage == 1, sourceMonth = if (eungbong) "2026.01·09" else "2026.07", pinkTarget = eungbong)
+            else if (laneEnding) LaneEndingDiagram(dark, Modifier.weight(1f).fillMaxWidth(), animate = playing && stage == 1, sourceMonth = "2026.07", pinkTarget = false)
             else if (mangwon) MangwonRestrictionDiagram(dark, Modifier.weight(1f).fillMaxWidth(), animate = playing && stage == 1)
             else ClusterRoadIllustration(dark, Modifier.weight(1f).fillMaxWidth(), scenario,
                 animate = playing && stage == 1)
@@ -113,7 +116,7 @@ internal fun ClusterDemoGallery(
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.Center) {
             TextButton(onClick = {
                 tour = !tour
-                if (tour) { laneEndingProfile = null; mangwon = false; selected = ClusterScenario.MERGE.id; stage = 0; if (!playing) onTogglePlay() }
+                if (tour) { roadProfile = null; selected = ClusterScenario.MERGE.id; stage = 0; if (!playing) onTogglePlay() }
             }, modifier = Modifier.heightIn(min = 76.dp).testTag("demo_tour")) {
                 Text(if (tour) "순회 중지" else "전체 순회", fontSize = 18.sp)
             }

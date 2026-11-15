@@ -6,8 +6,8 @@ import org.json.JSONObject
 
 /** A selected-road emulator experiment. This is not the approved production road catalog. */
 internal class SdkRoadReplaySession(context: Context, val profile: String = "yanghwa") {
-    private val asset = when (profile) { "mangwon-b", "mangwon-c", "eungbong" -> "$profile.json"; else -> "route.json" }
-    private val json = JSONObject(context.assets.open("gps-replay/$asset").bufferedReader().use { it.readText() })
+    private val roadCase = requireNotNull(RoadReplayCase.fromProfile(profile)) { "Unsupported replay profile: $profile" }
+    private val json = JSONObject(context.assets.open("gps-replay/${roadCase.asset}").bufferedReader().use { it.readText() })
     val name: String = json.getString("name")
     val road = RoadPolyline(json.getString("id"), json.getJSONArray("points").let { points ->
         (0 until points.length()).map { index -> points.getJSONArray(index).let { GeoPoint(it.getDouble(1), it.getDouble(0)) } }
@@ -33,6 +33,6 @@ internal class SdkRoadReplaySession(context: Context, val profile: String = "yan
         laneEndFromMeters = laneEnd?.getDouble("fromAlongMeters"),
         laneEndToMeters = laneEnd?.getDouble("toAlongMeters"),
         tunnelExitMeters = if (json.has("tunnelExitAlongMeters")) json.getDouble("tunnelExitAlongMeters") else null,
-        visible = result.visible, receivedCount = count, contextCase = json.optString("contextCase", "yanghwa"),
+        visible = result.visible, receivedCount = count, contextCase = roadCase.profile,
     )
 }
