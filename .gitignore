@@ -22,6 +22,7 @@ __pycache__/
 *.py[cod]
 *.hprof
 *.apk
+!/apk/이상훈_초행길_release.apk
 *.aab
 *.apks
 *.dex

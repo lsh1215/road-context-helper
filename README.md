@@ -66,7 +66,7 @@ flowchart LR
 
 ## 실행하기
 
-JDK 17, Android SDK 35, Pleos Connect 에뮬레이터가 필요합니다.
+JDK 17, Android SDK 35, Pleos Connect 에뮬레이터가 필요합니다. 개발·시연에는 Pleos Connect 2.1.0 arm64/API 34, Emulator 37.2.13, 전체 디스플레이 2560×1440을 사용했습니다. 앱 창은 기본 내비와 나란히 띄울 때 이보다 작습니다.
 
 1. Android Studio에서 이 저장소를 열고 Android SDK 경로를 설정합니다.
 2. 아래 명령으로 debug APK를 빌드합니다. 첫 실행에는 의존성 다운로드가 필요합니다.
@@ -77,7 +77,7 @@ JDK 17, Android SDK 35, Pleos Connect 에뮬레이터가 필요합니다.
 ./gradlew :app:assembleDebug
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`
+제출용 서명 APK: [`apk/이상훈_초행길_release.apk`](apk/이상훈_초행길_release.apk). 정차 중 **도로 상황 데모**는 release APK에서도 실행할 수 있습니다. 실제 도로 GPS 재생 시험은 개발 빌드에서만 제공됩니다.
 
 ```sh
 # 위치 판정 및 앱 로직 테스트
