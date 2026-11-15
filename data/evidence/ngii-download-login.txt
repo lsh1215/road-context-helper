@@ -1,0 +1,83 @@
+[p1 "국토정보플랫폼" | space "road-context-development"(144): 1 managed, 0 untracked — p1* "국토정보플랫폼"]
+root
+  container [ref=741]
+    text "이 누리집은 대한민국 공식 전자정부 누리집입니다."
+    container
+      container
+        unordered_list
+          list_item
+            anchor [ref=742, loc=href:/mn/siteMap.do, url=https://map.ngii.go.kr/mn/siteMap.do]
+              text "사이트맵"
+          list_item
+            anchor [ref=743, loc=href:/mi/oprGuide/portalIntro.do, url=https://map.ngii.go.kr/mi/oprGuide/portalIntro.do]
+              text "이용가이드"
+        container
+          heading
+            anchor [ref=744]
+          container
+            button [ref=745]
+              text "통합검색"
+            anchor [ref=746, url=javascript:reloadPage();]
+              text "로그인"
+            button [ref=747]
+              text "회원가입"
+      unordered_list "메인 메뉴"
+        list_item
+          button [ref=748]
+            text "국토정보맵"
+        list_item
+          button [ref=749]
+            text "공간정보"
+        list_item
+          button [ref=750]
+            text "자료실"
+        list_item
+          button [ref=751]
+            text "지원서비스"
+    container
+      container
+        heading
+          text "로그인 방식을 선택해주세요."
+        paragraph
+          text "정부 통합로그인은 한 번의 로그인으로 연계된 모든 공공 웹서비스를 이용할 수 있는 인증 서비스입니다."
+      container
+        container
+          container
+            heading
+              text "정부 통합로그인"
+              button [ref=752]
+            container
+              container
+                paragraph
+                  text "아직 정부 통합인증(Any-ID) 사용자가 아니신가요?"
+                anchor [ref=753, url=javascript:void(0);]
+                  text "사용자 등록"
+              container
+                paragraph
+                  text "정부 통합인증(Any-ID)"
+                anchor [ref=754, url=javascript:void(0);]
+                  text "사용자 관리"
+          unordered_list
+            list_item
+              anchor [ref=755, url=javascript:void(0);]
+                heading
+                  text "모바일 신분증"
+                paragraph
+                  text "스마트폰의 모바일 신분증으로 로그인"
+            list_item
+              anchor [ref=756, url=javascript:void(0);]
+                heading
+                  text "간편인증"
+                paragraph
+                  text "네이버, 카카오, 금융기관 등의 전자서명으로 로그인"
+        container
+          heading
+            text "이용기관 로그인"
+          unordered_list
+            list_item
+              anchor [ref=757, loc=href:javascript:testFnLogin();, url=javascript:testFnLogin();]
+                heading
+                  text "아이디"
+                  text "로그인"
+                paragraph
+                  text "국토정보플랫폼 회원가입시 등록한 아이디와 비밀번호를 이용하여 로그인하는 서비스입니다."

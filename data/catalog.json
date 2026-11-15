@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 2,
+  "catalogVersion": "2026-11-14-unverified",
+  "sourceMode": "REAL_WORLD",
+  "approvedSegments": [],
+  "status": "BLOCKED_SOURCE_ACCESS",
+  "reason": "NGII vector download requires authenticated access. No actual road geometry has been acquired or reviewed.",
+  "evidence": [
+    "evidence/ngii-download-login.txt",
+    "evidence/data-go-kr-metadata.json",
+    "evidence/ngii-catalog-candidates.json"
+  ]
+}

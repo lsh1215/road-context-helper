@@ -1,0 +1,135 @@
+{
+  "checkedAt": "2026-11-14",
+  "sourcePage": "https://gitc.or.kr/main/detail?c=A_653b58f001829&x=204",
+  "downloadUrl": "https://gitc.or.kr/uploads/board/table204/A_653b58f001829/20231027653b58f001f19.zip",
+  "bytes": 18274,
+  "sha256": "4d2ae3d0e6f45836f072882057ad83b27977c357dc9225a72f641a1fb5879e68",
+  "access": "Downloaded without authentication",
+  "approvalStatus": "UNAPPROVED",
+  "license": "Not found in source page or archive",
+  "publicationLabel": "update_20231027",
+  "embeddedCreationDate": "20220809",
+  "layers": [
+    {
+      "name": "20220809LANE",
+      "shapeType": 13,
+      "bbox": [
+        476613.53786335996,
+        3964484.309497858,
+        476755.29486335994,
+        3965546.715497858
+      ],
+      "recordCount": 47,
+      "fields": [
+        {
+          "name": "NAME",
+          "type": "C",
+          "width": 14,
+          "decimals": 0
+        },
+        {
+          "name": "LB_ID",
+          "type": "N",
+          "width": 5,
+          "decimals": 0
+        },
+        {
+          "name": "LB_TYPE",
+          "type": "N",
+          "width": 5,
+          "decimals": 0
+        },
+        {
+          "name": "LB_KIND",
+          "type": "N",
+          "width": 5,
+          "decimals": 0
+        },
+        {
+          "name": "COLOR",
+          "type": "N",
+          "width": 5,
+          "decimals": 0
+        }
+      ],
+      "crsWkt": "PROJCS[\"WGS_84_UTM_zone_52N\",GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS84\",SPHEROID[\"WGS84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",129],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1]]"
+    },
+    {
+      "name": "20220809LINK",
+      "shapeType": 13,
+      "bbox": [
+        476621.71486336,
+        3964474.2994978577,
+        476749.29886335996,
+        3965549.732497858
+      ],
+      "recordCount": 12,
+      "fields": [
+        {
+          "name": "NAME",
+          "type": "C",
+          "width": 4,
+          "decimals": 0
+        },
+        {
+          "name": "LANE_ID",
+          "type": "N",
+          "width": 5,
+          "decimals": 0
+        },
+        {
+          "name": "LANE_KIND",
+          "type": "N",
+          "width": 5,
+          "decimals": 0
+        },
+        {
+          "name": "LANE_MAIN",
+          "type": "N",
+          "width": 5,
+          "decimals": 0
+        }
+      ],
+      "crsWkt": "PROJCS[\"WGS_84_UTM_zone_52N\",GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS84\",SPHEROID[\"WGS84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",129],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1]]"
+    },
+    {
+      "name": "20220809STOPLANE",
+      "shapeType": 15,
+      "bbox": [
+        476617.1048633605,
+        3964475.9844978577,
+        476754.89186336193,
+        3965546.8066645693
+      ],
+      "recordCount": 10,
+      "fields": [
+        {
+          "name": "NAME",
+          "type": "C",
+          "width": 10,
+          "decimals": 0
+        },
+        {
+          "name": "SM_ID",
+          "type": "N",
+          "width": 5,
+          "decimals": 0
+        },
+        {
+          "name": "SM_KIND",
+          "type": "N",
+          "width": 5,
+          "decimals": 0
+        }
+      ],
+      "crsWkt": "PROJCS[\"WGS_84_UTM_zone_52N\",GEOGCS[\"GCS_WGS_1984\",DATUM[\"D_WGS84\",SPHEROID[\"WGS84\",6378137,298.257223563]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.017453292519943295]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",129],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"Meter\",1]]"
+    }
+  ],
+  "unresolved": [
+    "No explicit license for application redistribution or derivative use found",
+    "No lane predecessor/successor or direction fields in inspected LINK DBF",
+    "Source page describes a straight course; entrance-lane ending/merge not established",
+    "Archive creation date 2022-08-09 differs from page update label 2023-10-27; no current road survey evidence",
+    "No reviewed complete surrounding-road coverage"
+  ]
+}

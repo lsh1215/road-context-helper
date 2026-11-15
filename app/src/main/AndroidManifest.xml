@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+ <application android:label="초행길" android:icon="@drawable/ic_road_context" android:theme="@style/AppTheme" android:allowBackup="false" android:supportsRtl="true">
+  <activity android:name=".MainActivity" android:exported="true" android:resizeableActivity="true">
+   <meta-data android:name="distractionOptimized" android:value="true"/>
+   <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+  </activity>
+ </application>
+</manifest>

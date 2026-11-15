@@ -1,0 +1,209 @@
+{
+  "id": "yanghwa-north-gangbyeon-nanji-gps-replay",
+  "name": "양화대교 북단 → 강변북로 난지 방향 GPS 시험",
+  "retrievedAtUtc": "2026-11-14T09:32:29.201781+00:00",
+  "sourceUrls": [
+    "https://www.openstreetmap.org/api/0.6/way/333579041/full.json",
+    "https://www.openstreetmap.org/api/0.6/way/333681709/full.json",
+    "https://www.openstreetmap.org/api/0.6/way/333681710/full.json",
+    "https://www.openstreetmap.org/api/0.6/way/524851908/full.json",
+    "https://www.openstreetmap.org/api/0.6/way/206487103/full.json",
+    "https://www.sisul.or.kr/open_content/driveway/pis/pisMasList.do?pgno=428"
+  ],
+  "attribution": "© OpenStreetMap contributors",
+  "license": "ODbL-1.0",
+  "licenseUrl": "https://opendatacommons.org/licenses/odbl/1-0/",
+  "points": [
+    [
+      126.9105767,
+      37.54859
+    ],
+    [
+      126.9100689,
+      37.5485342
+    ],
+    [
+      126.9100481,
+      37.5485319
+    ],
+    [
+      126.9098022,
+      37.5485174
+    ],
+    [
+      126.9095368,
+      37.5485403
+    ],
+    [
+      126.9092208,
+      37.5485566
+    ],
+    [
+      126.908921,
+      37.5485737
+    ],
+    [
+      126.908264,
+      37.548595
+    ],
+    [
+      126.9075923,
+      37.5486613
+    ],
+    [
+      126.907173,
+      37.5486402
+    ],
+    [
+      126.9068074,
+      37.5485613
+    ],
+    [
+      126.9065105,
+      37.5485661
+    ],
+    [
+      126.9060418,
+      37.5486902
+    ],
+    [
+      126.9055476,
+      37.548907
+    ],
+    [
+      126.9040745,
+      37.5499228
+    ],
+    [
+      126.9025669,
+      37.5510415
+    ]
+  ],
+  "junctionAlongMeters": 404.566,
+  "startAlongMeters": 224.566,
+  "endAlongMeters": 474.566,
+  "totalLengthMeters": 808.512,
+  "rawWayIds": [
+    333579041,
+    333681709,
+    333681710,
+    524851908,
+    206487103
+  ],
+  "pointNodeIds": [
+    798645919,
+    13783979506,
+    5215341429,
+    5215341432,
+    2139941910,
+    2139941930,
+    8474668160,
+    387154712,
+    387154713,
+    387154714,
+    387154715,
+    387154716,
+    387154717,
+    436760148,
+    2139867174,
+    3523467300
+  ],
+  "pointAlongMeters": [
+    0,
+    45.195,
+    47.047,
+    68.785,
+    92.321,
+    120.238,
+    146.737,
+    204.706,
+    264.38,
+    301.419,
+    334.823,
+    361.003,
+    404.566,
+    454.36,
+    626.474,
+    808.512
+  ],
+  "junctionNodeId": 387154717,
+  "scope": "GPS SDK integration test window on a real road; not approved lane guidance. start/end are test thresholds, not official road boundaries.",
+  "topologyLimitations": [
+    "OSM road centerlines and shared endpoint prove mapped directed connection, not precise lane taper, legal lane-changing point, or merge gap.",
+    "No verified current-lane, lane count on ramp, lane-end location, or lane continuation instruction.",
+    "No native NaviHelper route association is established.",
+    "OSM community data may be outdated; ramp way versions date to 2017 though some nodes have later edits.",
+    "Seoul Facilities Corporation page corroborates merge area and direction only; not an independent precise coordinate survey."
+  ],
+  "wayMetadata": [
+    {
+      "wayId": 333579041,
+      "version": 8,
+      "timestamp": "2026-10-04T01:18:43Z",
+      "tags": {
+        "bicycle": "yes",
+        "cycleway:right": "opposite_track",
+        "highway": "trunk_link",
+        "lane_markings": "yes",
+        "lanes": "2",
+        "oneway": "yes"
+      }
+    },
+    {
+      "wayId": 333681709,
+      "version": 5,
+      "timestamp": "2026-10-04T01:18:46Z",
+      "tags": {
+        "highway": "trunk_link",
+        "lane_markings": "yes",
+        "oneway": "yes"
+      }
+    },
+    {
+      "wayId": 333681710,
+      "version": 3,
+      "timestamp": "2017-09-25T08:09:42Z",
+      "tags": {
+        "highway": "trunk_link",
+        "oneway": "yes"
+      }
+    },
+    {
+      "wayId": 524851908,
+      "version": 5,
+      "timestamp": "2026-07-08T17:32:28Z",
+      "tags": {
+        "expressway": "yes",
+        "highway": "trunk",
+        "maxspeed": "80",
+        "motorroad": "yes",
+        "name": "강변북로",
+        "name:en": "Gangbyeonbuk-ro",
+        "name:ko": "강변북로",
+        "name:ko-Latn": "Gangbyeonbungno",
+        "oneway": "yes",
+        "ref": "23;70;30",
+        "surface": "asphalt"
+      }
+    },
+    {
+      "wayId": 206487103,
+      "version": 17,
+      "timestamp": "2026-07-08T17:32:30Z",
+      "tags": {
+        "expressway": "yes",
+        "highway": "trunk",
+        "lanes": "4",
+        "maxspeed": "80",
+        "motorroad": "yes",
+        "name": "강변북로",
+        "name:en": "Gangbyeonbuk-ro",
+        "name:ko": "강변북로",
+        "name:ko-Latn": "Gangbyeonbungno",
+        "oneway": "yes",
+        "ref": "23;77;70;30",
+        "surface": "asphalt"
+      }
+    }
+  ]
+}

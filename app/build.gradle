@@ -1,0 +1,69 @@
+plugins {
+ id 'com.android.application'
+ id 'org.jetbrains.kotlin.android'
+ id 'org.jetbrains.kotlin.plugin.compose'
+}
+android {
+ namespace 'dev.pleos.roadcontext'
+ compileSdk 35
+ defaultConfig {
+  applicationId 'dev.pleos.roadcontext'
+  minSdk 28
+  targetSdk 34
+  versionCode 1
+  versionName '0.1.0'
+  testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+ }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+ kotlinOptions { jvmTarget = '17' }
+ buildFeatures { compose true; buildConfig true }
+}
+dependencies {
+ implementation project(':core')
+ implementation project(':data')
+ implementation project(':integration')
+ implementation platform('androidx.compose:compose-bom:2025.04.01')
+ implementation 'androidx.activity:activity-compose:1.10.1'
+ implementation 'androidx.compose.ui:ui'
+ implementation 'androidx.compose.ui:ui-tooling-preview'
+ implementation 'androidx.compose.material3:material3'
+ implementation 'androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7'
+ debugImplementation 'androidx.compose.ui:ui-tooling'
+ debugImplementation 'androidx.compose.ui:ui-test-manifest'
+ androidTestImplementation platform('androidx.compose:compose-bom:2025.04.01')
+ androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+ androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+ androidTestImplementation 'androidx.test:runner:1.6.2'
+ testImplementation 'junit:junit:4.13.2'
+}
+
+// The reviewed catalog is the sole runtime source; no synthetic road is packaged as live data.
+def catalogAssets = layout.buildDirectory.dir('generated/roadCatalogAssets')
+tasks.register('prepareRoadCatalog', Copy) {
+ from(project(':data').file('catalog.json'))
+ into(catalogAssets)
+}
+android.sourceSets.main.assets.srcDir(catalogAssets)
+tasks.named('preBuild').configure { dependsOn('prepareRoadCatalog') }
+
+// Reference road is bundled only for the explicit emulator GPS SDK experiment.
+def replayAssets = layout.buildDirectory.dir('generated/gpsReplayAssets')
+tasks.register('prepareGpsReplayReference', Copy) {
+ from(project(':data').file('reference/yanghwa-gps-replay/route.json'))
+ into(replayAssets.map { it.dir('gps-replay') })
+}
+android.sourceSets.debug.assets.srcDir(replayAssets)
+tasks.named('preBuild').configure { dependsOn('prepareGpsReplayReference') }
+
+// Same reference centerlines used by the mobile comparison; debug experiment only.
+tasks.register('prepareMangwonReplayReference', Copy) {
+ from(project(':data').file('reference/mangwon-gps-replay')) { include '*.json' }
+ into(replayAssets.map { it.dir('gps-replay') })
+}
+tasks.named('preBuild').configure { dependsOn('prepareMangwonReplayReference') }
+
+tasks.register('prepareEungbongReplayReference', Copy) {
+ from(project(':data').file('reference/eungbong-gps-replay')) { include 'eungbong.json' }
+ into(replayAssets.map { it.dir('gps-replay') })
+}
+tasks.named('preBuild').configure { dependsOn('prepareEungbongReplayReference') }
