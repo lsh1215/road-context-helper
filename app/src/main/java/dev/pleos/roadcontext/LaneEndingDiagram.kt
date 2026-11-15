@@ -22,9 +22,9 @@ import kotlin.math.min
 
 @Composable
 internal fun LaneEndingDiagram(dark: Boolean, modifier: Modifier = Modifier, animate: Boolean = true,
-    sourceMonth: String = "2026.07", pinkTarget: Boolean = false) {
-    var progress by remember { mutableFloatStateOf(.04f) }
-    LaunchedEffect(animate) {
+    sourceMonth: String = "2026.07", pinkTarget: Boolean = false, mirror: Boolean = false) {
+    var progress by remember(mirror) { mutableFloatStateOf(.04f) }
+    LaunchedEffect(animate, mirror) {
         if (animate) {
             var previous = withFrameNanos { it }
             while (true) withFrameNanos { now ->
@@ -42,11 +42,13 @@ internal fun LaneEndingDiagram(dark: Boolean, modifier: Modifier = Modifier, ani
             val density = LocalDensity.current
             val w = with(density) { maxWidth.toPx() }; val h = with(density) { maxHeight.toPx() }
             val laneWidth = min(w * .23f, h * .53f)
-            fun project(lane: Float, z: Float) = Offset(w * .42f + lane * laneWidth * (.22f + .78f * z), h * (.05f + .90f * z))
+            fun project(lane: Float, z: Float) = Offset(w * (if (mirror) .58f else .42f) +
+                lane * (if (mirror) -1f else 1f) * laneWidth * (.22f + .78f * z), h * (.05f + .90f * z))
             val carWidth = min(laneWidth * .62f, with(density) { 144.dp.toPx() })
             val carHeight = carWidth * 1.04f
             Canvas(Modifier.fillMaxSize().testTag("context_route_example").semantics {
                 contentDescription = if (pinkTarget) "응봉지하차도 출구의 진입 차로가 앞으로 이어지다가 좁아지며 왼쪽 분홍색 유도선 방면에 연결되는 도로 구조. 차로 수와 간격을 축약한 예시."
+                    else if (mirror) "왼쪽 진입 차로가 앞까지 이어지다가 좁아지며 끝나고 오른쪽 본선에 연결되는 가상 도로 구조."
                     else "오른쪽 진입 차로가 앞까지 이어지다가 좁아지며 끝나고 본선에 연결되는 도로 구조."
             }) {
                 fun shape(vararg vertices: Pair<Float, Float>) = Path().apply {
@@ -97,16 +99,16 @@ internal fun LaneEndingDiagram(dark: Boolean, modifier: Modifier = Modifier, ani
                 Text("분홍색 유도선",color=pink,fontSize=26.sp,fontWeight=FontWeight.Bold,modifier=Modifier.testTag("pink_target_label"))
                 Text("내부순환로 방면",color=ink,fontSize=20.sp)
             }
-            Column(Modifier.align(Alignment.TopEnd).fillMaxWidth(.29f).padding(top=maxHeight*.22f), verticalArrangement=Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.align(if(mirror) Alignment.TopStart else Alignment.TopEnd).fillMaxWidth(.29f).padding(top=maxHeight*.22f), verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 Text("차로 끝",color=mint,fontSize=27.sp,fontWeight=FontWeight.Bold,modifier=Modifier.testTag("lane_end_label"))
-                Text(if (pinkTarget) "왼쪽 합류 준비" else "여기서 본선과 연결",color=ink,fontSize=20.sp)
+                Text(if (pinkTarget) "왼쪽 합류 준비" else if (mirror) "여기서 오른쪽 본선과 연결" else "여기서 본선과 연결",color=ink,fontSize=20.sp)
             }
-            Column(Modifier.align(Alignment.BottomEnd).fillMaxWidth(.29f).padding(bottom=maxHeight*.12f),verticalArrangement=Arrangement.spacedBy(6.dp)) {
+            Column(Modifier.align(if(mirror) Alignment.BottomStart else Alignment.BottomEnd).fillMaxWidth(.29f).padding(bottom=maxHeight*.12f),verticalArrangement=Arrangement.spacedBy(6.dp)) {
                 Text(if (pinkTarget) "지하차도 출구" else "진입 차로",color=ink,fontSize=25.sp,fontWeight=FontWeight.Bold)
                 Text("앞까지 이어집니다",color=muted,fontSize=20.sp,modifier=Modifier.testTag("lane_continues_label"))
             }
         }
-        Text("$sourceMonth 로드뷰 기반 · 도로 구조 및 차량 이동 예시",color=muted,fontSize=15.sp,
+        Text(if(mirror) "가상 좌우 반전 도식 · 실제 도로 구조 자료 아님" else "$sourceMonth 로드뷰 기반 · 도로 구조 및 차량 이동 예시",color=muted,fontSize=15.sp,
             modifier=Modifier.fillMaxWidth().testTag("context_example_notice"),textAlign=TextAlign.Center)
     }
 }

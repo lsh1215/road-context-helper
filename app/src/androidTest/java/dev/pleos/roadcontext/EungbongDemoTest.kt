@@ -5,6 +5,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.*
 import org.junit.Rule
@@ -68,10 +69,24 @@ class EungbongDemoTest {
         frame()
         compose.onNodeWithTag("demo_source").assertTextEquals("응봉 관측 자료 기반 도식")
         compose.onNodeWithTag("second_lane_end_region").assertIsDisplayed()
-        compose.onNodeWithTag("case_mangwon_lane_end").performClick(); frame()
-        compose.onNodeWithTag("demo_source").assertTextEquals("망원 관측 자료 기반 도식")
+        compose.onNodeWithTag("demo_case_lane_end_rl").performScrollTo().performClick(); frame()
+        compose.onNodeWithTag("demo_source").assertTextEquals("망원 차로 끝 사례 기반 도식")
         compose.onNodeWithTag("context_example_notice").assertTextEquals("2026.07 로드뷰 기반 · 도로 구조 및 차량 이동 예시")
-        compose.onNodeWithTag("case_eungbong_lane_end").performClick(); frame()
+        compose.onNodeWithTag("demo_case_two_stage_lane_end").performScrollTo().performClick(); frame()
         compose.onNodeWithTag("demo_source").assertTextEquals("응봉 관측 자료 기반 도식")
+    }
+
+    @Test fun parkedEungbongVehicleAdvancesQuicklyWithoutChangingSdkPlayback() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent { ClusterDemoGallery(false, true, true, {}, {}, null, "eungbong") }
+        fun alongMeters(): Int {
+            val description = compose.onNodeWithTag("sdk_position_vehicle")
+                .fetchSemanticsNode().config[SemanticsProperties.ContentDescription].single()
+            return Regex("기준 경로 시작에서 (\\d+)m").find(description)!!.groupValues[1].toInt()
+        }
+        frame()
+        val start = alongMeters()
+        compose.mainClock.advanceTimeBy(600); compose.waitForIdle()
+        assertTrue("The parked preview should cover more than 100 m in 600 ms", alongMeters() - start > 100)
     }
 }

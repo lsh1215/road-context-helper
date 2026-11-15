@@ -43,7 +43,11 @@ internal fun EungbongPositionDiagram(state: SdkRouteReplayVisual, dark: Boolean,
     val geometry=TwoStageLaneGeometry(from,to,secondFrom,secondTo)
     val second=along>to
     val progress = LaneEndZone(if(second) secondFrom else from, if(second) secondTo else to, exit).at(along) ?: return
-    val displayed = animateFloatAsState(along.toFloat(), tween(350), label = "SDK longitudinal position").value
+    val displayed = if (actualSdk) animateFloatAsState(along.toFloat(), tween(350),
+        label = "SDK longitudinal position").value else along.toFloat()
+    val previewOpacity = if (actualSdk) 1f else minOf(
+        ((along - 40.0) / 80.0).toFloat(), ((680.0 - along) / 80.0).toFloat(),
+    ).coerceIn(0f, 1f)
     val ink = if(dark) Color(0xFFEAF4FA) else Color(0xFF193649)
     val muted = if(dark) Color(0xFFA7BDCD) else Color(0xFF526E80)
     val mint = if(dark) Color(0xFF70E8CD) else Color(0xFF007C6C)
@@ -119,6 +123,7 @@ internal fun EungbongPositionDiagram(state: SdkRouteReplayVisual, dark: Boolean,
             Canvas(Modifier.size(carSize,carSize*1.04f).graphicsLayer {
                 translationX=xy(geometry.illustrativeLane(displayed.toDouble()),displayed.toDouble()).x-carSize.toPx()/2
                 translationY=y(displayed.toDouble())-carSize.toPx()*.52f
+                alpha=previewOpacity
             }.testTag("sdk_position_vehicle").semantics {
                 contentDescription="차량의 도로상 진행 위치. 차로 배치는 설명용 예시. 기준 경로 시작에서 ${along.toInt()}m. 현재 차로는 확인하지 않음."
             }) { drawRearVehicle(dark) }

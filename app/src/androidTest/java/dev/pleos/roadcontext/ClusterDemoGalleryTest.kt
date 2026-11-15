@@ -6,68 +6,57 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
-import kotlin.math.abs
 
 class ClusterDemoGalleryTest {
     @get:Rule val compose = createComposeRule()
 
-    @Test fun everyScenarioHasItsOwnMeaningAndPassageHidesDrawing() {
+    @Test fun roadTypesUseReferenceStyleAndPassageHidesDrawing() {
         compose.setContent { ClusterDemoGallery(false, true, false, {}, {}, null) }
-        compose.onNodeWithTag("demo_title").assertTextEquals(ClusterScenario.SHORT_EXIT.title)
-        ClusterScenario.entries.forEach { scenario ->
-            compose.onNodeWithTag("case_${scenario.id}").performScrollTo().performClick()
-            compose.onNodeWithTag("demo_title").assertTextEquals(scenario.title)
-            compose.onNodeWithTag("context_route_example").assertContentDescriptionEquals(
-                "${scenario.roadDescription} 녹색 면은 설명용 경로이며 실제 차로 인식이나 차량 제어 상태가 아님.")
+        RoadDemoCase.entries.forEach { roadCase ->
+            compose.onNodeWithTag("demo_case_${roadCase.id}").performScrollTo().performClick()
+            compose.onNodeWithTag("demo_title").assertTextEquals(roadCase.title)
+            compose.onNodeWithTag("demo_source").assertTextEquals(roadCase.source)
+            val vehicleTag = if (roadCase == RoadDemoCase.TWO_STAGE_LANE_END) "sdk_position_vehicle" else "context_vehicle"
+            compose.onNodeWithTag(vehicleTag).assertIsDisplayed()
             compose.onNodeWithTag("stage_preview").performClick()
-            compose.onNodeWithTag("demo_title").assertTextEquals(scenario.previewTitle)
+            compose.onNodeWithTag("demo_title").assertTextEquals(roadCase.previewTitle)
             compose.onNodeWithTag("stage_passed").performClick()
-            compose.onNodeWithTag("context_vehicle").assertDoesNotExist()
+            compose.onNodeWithTag(vehicleTag).assertDoesNotExist()
             compose.onNodeWithTag("demo_passed").assertIsDisplayed()
-            compose.onNodeWithTag("stage_guidance").performClick()
-            compose.onNodeWithTag("context_vehicle").assertIsDisplayed()
         }
     }
 
-    @Test fun restrictedStateRemovesSyntheticDrawingAndControls() {
+    @Test fun restrictedStateRemovesDrawingAndControls() {
         val allowed = mutableStateOf(true)
-        compose.setContent { ClusterDemoGallery(false, allowed.value, true, {}, {}, null) }
+        compose.setContent { ClusterDemoGallery(false, allowed.value, false, {}, {}, null) }
         compose.runOnIdle { allowed.value = false }
         compose.onNodeWithTag("demo_restricted").assertIsDisplayed()
         compose.onNodeWithTag("context_diagram").assertDoesNotExist()
-        compose.onNodeWithTag("case_short_exit").assertDoesNotExist()
+        compose.onNodeWithTag("demo_case_lane_end_rl").assertDoesNotExist()
         compose.runOnIdle { allowed.value = true }
         compose.onNodeWithTag("context_diagram").assertIsDisplayed()
     }
 
-    @Test fun closeExitCrossesThreeLanesInSeparateForwardFacingSteps() {
+    @Test fun laneEndExamplesMoveInOppositeDirectionsWithoutRotating() {
         compose.mainClock.autoAdvance = false
-        val playing = mutableStateOf(true)
-        compose.setContent { ClusterDemoGallery(false, true, playing.value, { playing.value = !playing.value }, {}, null) }
-        compose.mainClock.advanceTimeByFrame()
-        compose.waitForIdle()
-        fun advance(ms: Long) { compose.mainClock.advanceTimeBy(ms, ignoreFrameDuration = true); compose.waitForIdle() }
+        compose.setContent { ClusterDemoGallery(false, true, true, {}, {}, null) }
+        fun advance(ms: Long) { compose.mainClock.advanceTimeBy(ms); compose.waitForIdle() }
         fun car() = compose.onNodeWithTag("context_vehicle").fetchSemanticsNode().boundsInRoot
+
         advance(100)
-        val start = car()
-        advance(750)
-        val first = car()
-        advance(150)
-        assertTrue("First lane has a readable hold", abs(first.center.x - car().center.x) < 2f)
-        advance(750)
-        val second = car()
-        advance(150)
-        assertTrue("Second lane has a readable hold", abs(second.center.x - car().center.x) < 2f)
-        advance(750)
-        val third = car()
-        assertTrue(first.center.x > start.center.x + 20f)
-        assertTrue(second.center.x > first.center.x + 20f)
-        assertTrue(third.center.x > second.center.x + 20f)
-        assertTrue(abs(start.width - third.width) < 1f && abs(start.height - third.height) < 1f)
-        compose.onNodeWithTag("demo_play").performClick()
-        compose.mainClock.advanceTimeByFrame(); compose.waitForIdle()
-        val paused = car()
-        advance(3_000)
-        assertTrue("Paused example must stay still", abs(paused.center.x - car().center.x) < 1f)
+        val rightEntry = car()
+        advance(2200)
+        val leftMainline = car()
+        assertTrue(leftMainline.center.x < rightEntry.center.x - 40f)
+        assertTrue(kotlin.math.abs(rightEntry.width - leftMainline.width) < 1f)
+
+        compose.onNodeWithTag("demo_case_lane_end_lr").performScrollTo().performClick()
+        advance(100)
+        val leftEntry = car()
+        advance(2200)
+        val rightMainline = car()
+        assertTrue("Mirrored lane end must move right: entry=${leftEntry.center.x}, mainline=${rightMainline.center.x}",
+            rightMainline.center.x > leftEntry.center.x + 40f)
+        compose.onNodeWithTag("demo_source").assertTextContains("실제 구간 아님", substring = true)
     }
 }

@@ -42,4 +42,19 @@ class MangwonMarkingsTest {
         compose.onNodeWithTag("context_vehicle").assertDoesNotExist()
         compose.onNodeWithTag("mangwon_solid").assertDoesNotExist()
     }
+
+    @Test fun mirroredCloseExitMovesLeftToRightAndIsLabeledAsFictional() {
+        compose.mainClock.autoAdvance = false
+        compose.setContent { ClusterDemoGallery(false, true, true, {}, {}, null) }
+        compose.onNodeWithTag("demo_case_close_exit_lr").performScrollTo().performClick()
+        fun advance(ms: Long) { compose.mainClock.advanceTimeBy(ms); compose.waitForIdle() }
+        fun car() = compose.onNodeWithTag("context_vehicle").fetchSemanticsNode().boundsInRoot
+        advance(100)
+        val entry = car()
+        advance(2200)
+        val exit = car()
+        assertTrue(exit.center.x > entry.center.x + 50f)
+        compose.onNodeWithTag("demo_source").assertTextContains("실제 구간 아님", substring = true)
+        compose.onNodeWithTag("marking_source").assertTextContains("가상 좌우 반전", substring = true)
+    }
 }
