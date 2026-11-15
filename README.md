@@ -40,7 +40,7 @@ flowchart LR
 
 | 모듈 | 역할 |
 |---|---|
-| `app` | Compose 화면, 차량 모형, SDK 세션과 데모 흐름 |
+| `app` | Compose 화면·차량 모형, SDK 위치 맥락 조립, 안내 결과 표시, 세션·데모 흐름 |
 | `core` | Android와 독립적인 위치 투영·진입/통과 판정 |
 | `integration` | FusedLocation·NaviHelper·차량 UX 제한 읽기 |
 | `data` | 도로 구조 데이터, 기준 경로, 출처와 검수 정보 |
