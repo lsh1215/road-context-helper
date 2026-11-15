@@ -1,0 +1,162 @@
+Navigation companion: installed public API evidence
+Checked 2026-11-14; read-only investigation, no emulator/build/source/config changes.
+
+판정
+1. NaviHelper3.0.5의 외부 공개 진입점에 split-window/overlay/custom View/marker/layer API는 없다.
+   getInternalApi()는 JVM public으로 보이지만 공식 공개 API 목록에는 없으며 InternalApi/PrivateApi 영역은 사용 허용으로 해석하지 않았다.
+   따라서 '없다'는 이 버전의 공개 계약에 대한 결론이며 Pleos 시스템 전체 기능 부재라는 뜻은 아니다.
+2. NAVI_CUSTOM_MAP 권한이 달린 외부 메서드는 requestNavigationScreen(NavigationScreenRequest)이다.
+   navi-data3.0.4의 요청 종류: Foreground, MoveToCurrentLocationOnMap, SearchPlace(keyword),
+   POIDetailPopup(poiId, poiProvider), OverviewRoute(RouteOverviewShowInfo), Settings, EditRoute,
+   RouteOptionList, RecentDestinations, FavoriteMain, AddHomeFavorite, AddWorkFavorite, NearbyChargingStations.
+   이는 내비가 정의한 화면 요청이다. POIDetailPopup의 이름을 임의 안내카드/Compose UI 삽입 API로 해석할 수 없다.
+   공개 계약에서 임의 marker/layer 삽입도 확인하지 못했다. 권한 이름만으로 custom map UI를 약속하지 않는다.
+3. 근접 감지는 공개 API로 가능하다: FusedLocation.addProximityAlert(request, listener).
+   request는 latitude/longitude/radiusMeters/Set<ENTER,EXIT>, listener는 onRegistered(alertId),
+   onTransition(ProximityAlertEvent(alertId,transition)), onError(Exception).
+   removeProximityAlert(alertId)로 해제. javap -v로 두 메서드의 FUSED_LOCATION RequiresPermission 확인.
+   공개 DTO는 원형 영역 진입/이탈이며 차로, 진행방향, 경로 소속, 합류 구조를 판정하는 입력이 없다.
+   검증된 도로 데이터/경로/heading으로 별도 필터링이 필요하다. 최대 등록 수, background 지속,
+   프로세스 사망 후 복원, callback 지연 보장, 각 반경의 정확도는 이 조사에서 확인하지 못했다.
+   기존 실험은 registerFusedLocationCallback 위치 갱신 성공이며 proximity callback 실측은 아직 없다.
+4. 현재 제품은 MainActivity resizeableActivity=true, distractionOptimized=true이다.
+   이는 분할 화면에 대응할 준비이지 내비와 자동으로 나란히 배치할 권한/성공 증거가 아니다.
+   Android에는 FLAG_ACTIVITY_LAUNCH_ADJACENT|FLAG_ACTIVITY_NEW_TASK가 있지만 제조사 정책에 따라 다르며
+   Pleos 런처가 이 조합을 지원하는지 별도 공식 확인/기기 시험이 필요하다. 이번에는 실행하지 않았다.
+5. 현재 제품은 MainActivity.onStart에서 model.start, onStop에서 model.stop을 호출한다.
+   RoadViewModel.stop은 ticker 중지, livePresentation 제거, reader.close/null을 수행한다.
+   manifest에 Service/Receiver, SYSTEM_ALERT_WINDOW, FOREGROUND_SERVICE, POST_NOTIFICATIONS가 없다.
+   따라서 현재는 보이는 앱 안에서 조건부 카드를 표시하는 구조이며, 숨겨진 앱이 합류 때 자동 전면 등장하는 구조가 아니다.
+   분할 화면에서 계속 visible/STARTED이면 수신을 유지할 수 있는 Android 생명주기 구조이나 Pleos 실측은 미완료.
+6. 근접 event 수신과 UI 전면 등장 권한은 별개다. addProximityAlert는 앱 화면을 자동 띄우지 않는다.
+   showLocationAccessBlockedPopup은 SDK 위치 접근 차단 안내용이며 임의 팝업 API가 아니다.
+   백그라운드 Activity 실행에는 Android 제한과 차량 UI 정책 검토가 필요하다. 알림/서비스/overlay를 구현·승인됐다고 가정하지 않는다.
+
+현재 제품에서 가장 근거 있는 선택: 사용자가 내비와 보조 앱을 나란히 열 수 있는 런처 동작을 먼저 검증하고,
+보조 앱 내부 안내는 접근할 때만 활성화한다. 분할 성공이 아직 증명되지 않았으므로 이 선택도 다음 검증안이다.
+완전히 숨었다가 합류 때 자동 팝업하는 안은 background 수신·표시 권한·주행 UI 정책이 별도 미해결이다.
+
+공식 문서 (2026-11-14 확인)
+https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/NaviHelper/declaring-permissions
+https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/NaviHelper/navi-helper/ai.pleos.playground.navi.helper/navi-helper/entry
+https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/NaviHelper/navi-helper/ai.pleos.playground.navi.data/navigation-screen-request/entry
+https://document.pleos.ai/docs/pleos-only/connect-sdk-pleos/FusedLocation/intro
+https://developer.android.com/develop/ui/views/layout/support-multi-window-mode
+https://developer.android.com/guide/components/activities/secure-bal
+
+Dokka 문서의 개별 메서드 본문은 웹 추출에서 비어 있어 타입·권한은 설치 artifact javap 결과와 대조했다.
+제품 파일: app/src/main/AndroidManifest.xml, integration/src/main/AndroidManifest.xml,
+app/src/main/java/dev/pleos/roadcontext/{MainActivity,RoadViewModel}.kt (앱 프로젝트 기준).
+
+.test-runtime/gradle-home/caches/modules-2/files-2.1/ai.pleos.playground/NaviHelper/3.0.5/a7b78be7cdbe0942a009d4f8781f7d99f20d7ece/NaviHelper-3.0.5.aar
+SHA256 15fadd11c7c611b1abdf7ebf9ce91f2a6ce2728e60b4e38b4343e11bb9c12e97
+.test-runtime/gradle-home/caches/modules-2/files-2.1/ai.pleos.playground/navi-data/3.0.4/53a3d251642b357d367f41b1d2e4b7c016e04b13/navi-data-3.0.4.aar
+SHA256 7ca00e592134b53237a48cc3b7864063ecc5e2885465e3ce9c8c2a29789a2e2b
+.test-runtime/gradle-home/caches/modules-2/files-2.1/ai.pleos.playground/FusedLocation/1.1.3/24464b76a3960af69bd2cf4ec43242254f769d6f/FusedLocation-1.1.3.aar
+SHA256 20ff6dc2efbea53f32d1ce4712d517fc4abac3a9ce4b990f4aca52c35ebef081
+
+COMMAND: javap -classpath /tmp/NaviHelper-public-api.jar -public ai.pleos.playground.navi.helper.NaviHelper
+Compiled from "SourceFile"
+public final class ai.pleos.playground.navi.helper.NaviHelper {
+  public ai.pleos.playground.navi.helper.NaviHelper(android.content.Context);
+  public static final java.util.concurrent.atomic.AtomicBoolean access$isInitialized$p(ai.pleos.playground.navi.helper.NaviHelper);
+  public final void initialize();
+  public final void initialize(kotlin.jvm.functions.Function0<kotlin.Unit>, kotlin.jvm.functions.Function1<? super java.lang.Throwable, kotlin.Unit>);
+  public final void release();
+  public final void addListener(ai.pleos.playground.navi.helper.listener.NaviHelperEventListener);
+  public final void removeListener(ai.pleos.playground.navi.helper.listener.NaviHelperEventListener);
+  public final void requestRoute(ai.pleos.playground.navi.data.RouteInfo);
+  public final void requestRouteWithWaypoints(ai.pleos.playground.navi.data.RouteWithWaypointsRequest);
+  public final void cancelRoute();
+  public final void addWaypoint(ai.pleos.playground.navi.data.RequestWaypointInfo);
+  public final void removeWaypoint(ai.pleos.playground.navi.constants.WaypointIndex);
+  public final void changeRouteOption(ai.pleos.playground.navi.constants.RouteOption);
+  public final void requestReRoute();
+  public final void getBookmarkInfo();
+  public final void getRecentDestinationInfo();
+  public final void getRouteStateInfo();
+  public final void getCurrentLocationInfo();
+  public final void getDestinationInfo();
+  public final void getWaypointInfo();
+  public final void getTBTInfo();
+  public final void getChargerOperatorInfo();
+  public final void requestNavigationScreen(ai.pleos.playground.navi.data.NavigationScreenRequest);
+  public final void requestTrip(ai.pleos.playground.navi.data.TripRequest);
+  public final ai.pleos.playground.navi.helper.api.InternalApi getInternalApi();
+}
+
+
+COMMAND: javap -classpath /tmp/FusedLocation-public-api.jar -public ai.pleos.playground.location.fused.FusedLocation
+Compiled from "SourceFile"
+public final class ai.pleos.playground.location.fused.FusedLocation {
+  public ai.pleos.playground.location.fused.FusedLocation(android.content.Context);
+  public static final android.content.Context access$getContext$p(ai.pleos.playground.location.fused.FusedLocation);
+  public final void initialize();
+  public final void release();
+  public final boolean isSupported();
+  public final void getLastKnownLocation(ai.pleos.playground.location.fused.listener.FusedLocationListener);
+  public final void registerFusedLocationCallback(ai.pleos.playground.location.fused.listener.FusedLocationListener);
+  public final void unregisterFusedLocationCallback(ai.pleos.playground.location.fused.listener.FusedLocationListener);
+  public final void addProximityAlert(ai.pleos.playground.location.fused.model.ProximityAlertRequest, ai.pleos.playground.location.fused.listener.ProximityAlertListener);
+  public final void removeProximityAlert(java.lang.String);
+  public final void showLocationAccessBlockedPopup();
+}
+
+
+COMMAND: javap -classpath /tmp/FusedLocation-public-api.jar -public ai.pleos.playground.location.fused.model.ProximityAlertRequest
+Compiled from "SourceFile"
+public final class ai.pleos.playground.location.fused.model.ProximityAlertRequest {
+  public ai.pleos.playground.location.fused.model.ProximityAlertRequest(double, double, float, java.util.Set<? extends ai.pleos.playground.location.fused.model.ProximityTransition>);
+  public static ai.pleos.playground.location.fused.model.ProximityAlertRequest copy$default(ai.pleos.playground.location.fused.model.ProximityAlertRequest, double, double, float, java.util.Set, int, java.lang.Object);
+  public final double getLatitude();
+  public final double getLongitude();
+  public final float getRadiusMeters();
+  public final java.util.Set<ai.pleos.playground.location.fused.model.ProximityTransition> getTransitionTypes();
+  public final java.lang.String validationErrorOrNull$FusedLocation_release();
+  public final double component1();
+  public final double component2();
+  public final float component3();
+  public final java.util.Set<ai.pleos.playground.location.fused.model.ProximityTransition> component4();
+  public final ai.pleos.playground.location.fused.model.ProximityAlertRequest copy(double, double, float, java.util.Set<? extends ai.pleos.playground.location.fused.model.ProximityTransition>);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+
+
+COMMAND: javap -classpath /tmp/FusedLocation-public-api.jar -public ai.pleos.playground.location.fused.listener.ProximityAlertListener
+Compiled from "SourceFile"
+public interface ai.pleos.playground.location.fused.listener.ProximityAlertListener {
+  public abstract void onRegistered(java.lang.String);
+  public abstract void onTransition(ai.pleos.playground.location.fused.model.ProximityAlertEvent);
+  public abstract void onError(java.lang.Exception);
+}
+
+
+COMMAND: javap -classpath /tmp/FusedLocation-public-api.jar -public ai.pleos.playground.location.fused.model.ProximityAlertEvent
+Compiled from "SourceFile"
+public final class ai.pleos.playground.location.fused.model.ProximityAlertEvent {
+  public ai.pleos.playground.location.fused.model.ProximityAlertEvent(java.lang.String, ai.pleos.playground.location.fused.model.ProximityTransition);
+  public static ai.pleos.playground.location.fused.model.ProximityAlertEvent copy$default(ai.pleos.playground.location.fused.model.ProximityAlertEvent, java.lang.String, ai.pleos.playground.location.fused.model.ProximityTransition, int, java.lang.Object);
+  public final java.lang.String getAlertId();
+  public final ai.pleos.playground.location.fused.model.ProximityTransition getTransition();
+  public final java.lang.String component1();
+  public final ai.pleos.playground.location.fused.model.ProximityTransition component2();
+  public final ai.pleos.playground.location.fused.model.ProximityAlertEvent copy(java.lang.String, ai.pleos.playground.location.fused.model.ProximityTransition);
+  public java.lang.String toString();
+  public int hashCode();
+  public boolean equals(java.lang.Object);
+}
+
+
+COMMAND: javap -classpath /tmp/FusedLocation-public-api.jar -public ai.pleos.playground.location.fused.model.ProximityTransition
+Compiled from "SourceFile"
+public final class ai.pleos.playground.location.fused.model.ProximityTransition extends java.lang.Enum<ai.pleos.playground.location.fused.model.ProximityTransition> {
+  public static final ai.pleos.playground.location.fused.model.ProximityTransition ENTER;
+  public static final ai.pleos.playground.location.fused.model.ProximityTransition EXIT;
+  public static ai.pleos.playground.location.fused.model.ProximityTransition[] values();
+  public static ai.pleos.playground.location.fused.model.ProximityTransition valueOf(java.lang.String);
+  public static kotlin.enums.EnumEntries<ai.pleos.playground.location.fused.model.ProximityTransition> getEntries();
+}
+
+후속 root 실측: 같은 날 navigation-companion-01에서 OS 창 바를 통한 내비+우리 앱 동시 portrait 표시 성공. 위 API 조사 중 미검증 표기는 조사 당시 범위이며 최신 종합 판정은 navigation-companion.md 참고. 백그라운드/자동 팝업은 여전히 미검증.
