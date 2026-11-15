@@ -1,0 +1,16 @@
+{
+  "acceptedDate": "2026-11-15",
+  "status": "user-accepted-preserve-unchanged",
+  "files": [
+    {
+      "file": "comparison.mp4",
+      "source": "verification/runs/mangwon-markings-comparison-07/mangwon-markings-comparison-audible.mp4",
+      "sha256": "9c72f9a7d336fdd3a97cb9e1be9491d2180b79a9cf01387984a1d61a0dcef9c1"
+    },
+    {
+      "file": "highlights.mp4",
+      "source": "verification/runs/mangwon-markings-comparison-07/mangwon-markings-highlights-audible.mp4",
+      "sha256": "e8e0c45696a6248f268296e7f81596dd5c17f4d07fdab2a917412b9266f7cd5c"
+    }
+  ]
+}
