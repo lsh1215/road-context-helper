@@ -120,7 +120,7 @@ class RoadViewModel(application: Application, savedStateHandle: SavedStateHandle
   if(started) start()
  }
  fun clusterDemo(profile:String? = null):Boolean {
-  if(!BuildConfig.DEBUG || !ui.settingsAllowed || permissionGate.pending) return false
+  if(!ui.settingsAllowed || permissionGate.pending) return false
   sdkReplay=null;lastReplayDecision=null
   reader?.close();reader=null
   engine.reset(InputSource.REPLAY_SYNTHETIC)

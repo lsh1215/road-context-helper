@@ -119,7 +119,7 @@ internal fun RoadUiState.approvedDiagram(): DiagramModel? {
     MaterialTheme(colorScheme = scheme) {
         if (state.clusterDemo) {
             ClusterDemoGallery(state.dark, state.settingsAllowed, state.playing,
-                onPlay, onLive, onSdkReplay, state.clusterDemoProfile)
+                onPlay, onLive, if (BuildConfig.DEBUG) onSdkReplay else null, state.clusterDemoProfile)
             ObserveRoadComposition(state, "outer", if (state.settingsAllowed) "controls" else "restricted")
             return@MaterialTheme
         }
@@ -141,7 +141,7 @@ internal fun RoadUiState.approvedDiagram(): DiagramModel? {
                 GuidanceContent(state, palette, wide, Modifier.weight(1f).fillMaxWidth())
                 if (state.settingsAllowed) {
                     ParkedActions(state, palette, wide, tight, onDemo, onLive, onPlay, onNext, onReset, onTheme)
-                    if (BuildConfig.DEBUG && onClusterDemo != null && !state.permissionRequestPending)
+                    if (onClusterDemo != null && !state.permissionRequestPending)
                         TextButton(onClick = onClusterDemo, modifier = Modifier.fillMaxWidth().heightIn(min = 76.dp).testTag("cluster_demo")) {
                             Text("도로 상황 데모", fontSize = 20.sp)
                         }

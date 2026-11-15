@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
  override fun onCreate(savedInstanceState:Bundle?) {
   super.onCreate(savedInstanceState)
   replayRequested=BuildConfig.DEBUG && intent.getBooleanExtra("sdk_road_replay",false)
-  galleryRequested=BuildConfig.DEBUG && intent.getBooleanExtra("cluster_demo",false)
+  galleryRequested=intent.getBooleanExtra("cluster_demo",false)
   model=ViewModelProvider(this)[RoadViewModel::class.java]
   restrictions=CarUxRestrictionSource(this) { policy ->
    Log.i("RoadContextUx",policy.toString())
