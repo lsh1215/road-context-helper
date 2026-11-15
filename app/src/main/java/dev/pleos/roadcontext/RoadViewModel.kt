@@ -5,7 +5,6 @@ import android.os.SystemClock
 import android.os.Handler
 import android.os.Looper
 import dev.pleos.roadcontext.data.*
-import kotlin.math.abs
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,13 +28,10 @@ class RoadViewModel(application: Application, savedStateHandle: SavedStateHandle
  private var sdkReplay:SdkRoadReplaySession?=null
  private var lastReplayDecision:String?=null
  private val handler=Handler(Looper.getMainLooper())
- private var routeGeneration=0L
- internal val currentRouteGeneration:Long get()=routeGeneration
- private var lastNavi:SourceLocation?=null
- private var naviMovementObserved=false
+ private val locationContext=SdkLocationContext()
+ internal val currentRouteGeneration:Long get()=locationContext.routeGeneration
  private var liveInputAvailable=true
  private var locationUnsupported=false
- private var epochOffsetMs=System.currentTimeMillis()-SystemClock.elapsedRealtime()
  private val ticker=object:Runnable {
   override fun run() {
    if(!started) return
@@ -51,13 +47,10 @@ class RoadViewModel(application: Application, savedStateHandle: SavedStateHandle
  private var demoIndex = -1
  private var demoTime = 0L
  private val positions = listOf(0.0,100.0,200.0,300.0,450.0,600.0,750.0,900.0)
- private var locationCount = 0
- private var lastPosition: Pair<Double,Double>? = null
- private var moved = false
  private var started = false
 
  fun start() {
-  if(!started) { handler.postDelayed(ticker,1000);epochOffsetMs=System.currentTimeMillis()-SystemClock.elapsedRealtime() }
+  if(!started) { handler.postDelayed(ticker,1000);locationContext.refreshClockOffset() }
   started=true
   liveGuidance.setAvailable(true);liveInputAvailable=true
   val granted=hasLocationPermission()
@@ -123,7 +116,7 @@ class RoadViewModel(application: Application, savedStateHandle: SavedStateHandle
   sdkReplay=null
   engine.reset(InputSource.REAL_SDK)
   ui=RoadUiState(inputSource=DiagramSource.REAL_SDK,settingsAllowed=ui.settingsAllowed,dark=ui.dark)
-  locationCount=0;lastPosition=null;moved=false;lastNavi=null;naviMovementObserved=false
+  locationContext.resetLiveSession()
   if(started) start()
  }
  fun clusterDemo(profile:String? = null):Boolean {
@@ -143,7 +136,7 @@ class RoadViewModel(application: Application, savedStateHandle: SavedStateHandle
   }
   reader?.close();reader=null
   sdkReplay=session;lastReplayDecision=null
-  epochOffsetMs=System.currentTimeMillis()-SystemClock.elapsedRealtime()
+  locationContext.refreshClockOffset()
   ui=RoadUiState(settingsAllowed=ui.settingsAllowed,dark=ui.dark,inputSource=DiagramSource.REAL_SDK,
    sourceLabel="실도로 GPS 시험 · Pleos SDK",sdkReplay=session.visual(session.gate.tick(SystemClock.elapsedRealtime())))
   record("gps_replay_session",JSONObject().put("route",session.road.id).put("inputOrigin","EMULATOR_GPS")
@@ -206,88 +199,84 @@ class RoadViewModel(application: Application, savedStateHandle: SavedStateHandle
  internal fun consume(event:SourceEvent) {
   val data=JSONObject().put("source","REAL_SDK").put("eventType",event.javaClass.simpleName)
   when(event) {
-   is SourceEvent.Location -> {
-    val p=event.sample
-    data.put("routeId",p.routeId).put("currentRouteIndex",p.currentRouteIndex).put("provider",p.provider.name).put("latitude",p.latitude).put("longitude",p.longitude).put("heading",p.heading).put("measuredTime",p.measuredTimeMillis).put("receivedElapsedMillis",p.receivedElapsedMillis).put("confidence",p.confidence).put("selected",event.selectedForPosition)
-    if(p.provider==LocationProvider.NAVI_HELPER) {
-     lastNavi?.let { if(it.latitude!=p.latitude || it.longitude!=p.longitude) naviMovementObserved=true }
-     lastNavi=p
-    }
-    if(event.selectedForPosition && !ui.simulation) {
-     locationUnsupported=false
-     if(!liveInputAvailable) {liveGuidance.setAvailable(true);liveInputAvailable=true}
-     locationCount++
-     val point=p.latitude to p.longitude
-     if(lastPosition!=null && point!=lastPosition) moved=true
-     lastPosition=point
-     val now=SystemClock.elapsedRealtime();val wall=System.currentTimeMillis()
-     // sdk-01 verified Unix-epoch milliseconds for this provider/version. Check clock drift every time.
-     val measured=p.measuredTimeMillis?.minus(epochOffsetMs)
-     val clockValid=p.provider==LocationProvider.FUSED_LOCATION && measured!=null &&
-      abs((wall-now)-epochOffsetMs)<=250 && measured in 0..now
-     val replay=sdkReplay
-     if(replay!=null) {
-      replay.count++;replay.lastPoint=GeoPoint(p.latitude,p.longitude);replay.lastHeading=p.heading
-      val replayResult=replay.gate.update(SdkRouteReplaySample(replay.lastPoint!!,p.heading,
-       if(clockValid) measured else null,p.receivedElapsedMillis),now)
-      data.put("inputOrigin","EMULATOR_GPS").put("testRoute",replay.road.id)
-      record("sdk",data)
-      presentSdkReplay(replayResult,"sdk")
-      return
-     }
-     val nav=lastNavi
-     val coherence=nav!=null && naviMovementObserved && !nav.routeId.isNullOrBlank() &&
-      now-nav.receivedElapsedMillis in 0..2000 &&
-      locationSeparation(p,nav)<=20.0
-     val result=liveGuidance.update(LiveLocationInput(GeoPoint(p.latitude,p.longitude),p.heading,
-      p.receivedElapsedMillis,measured,clockValid,coherence,
-      positionUncertaintyMeters=null, // SDK confidence has no verified meter unit; never invent one.
-      routeId=nav?.routeId,routeGeneration=routeGeneration),now,wall)
-     presentLive(result)
-     ui=ui.copy(diagnostic="${p.provider}: $locationCount samples; moved=$moved; ${result.status}")
-    }
-   }
+   is SourceEvent.Location -> if(handleLocation(event,data)) return
    is SourceEvent.Turns -> {
     val array=org.json.JSONArray()
     event.items.forEach {array.put(JSONObject().put("type",it.type).put("distance",it.rawDistance).put("description",it.description))}
     data.put("items",array).put("generation",event.observedRouteGeneration).put("routeAssociationVerified",event.routeAssociationVerified)
    }
-   is SourceEvent.Connection -> {
-    data.put("component",event.component).put("state",event.state)
-    if(event.component=="FusedLocation" && event.state=="NO_LOCATION" && sdkReplay!=null) {
-     sdkReplay?.reset();presentSdkReplay(SdkRouteReplayResult(SdkRouteReplayState.INVALID),"no_location")
-    }
-    if(event.component=="FusedLocation" && event.state=="UNSUPPORTED" && !ui.simulation) {
-     locationUnsupported=true
-     liveInputAvailable=false
-     lastNavi=null;naviMovementObserved=false
-     liveGuidance.setAvailable(false)
-     if(sdkReplay!=null) {sdkReplay?.reset();presentSdkReplay(SdkRouteReplayResult(SdkRouteReplayState.INVALID),"unsupported")}
-     else presentLive(liveGuidance.tick(SystemClock.elapsedRealtime(),System.currentTimeMillis()))
-    }
-   }
-   is SourceEvent.Failure -> {
-    data.put("component",event.component).put("code",event.code).put("detail",event.detail)
-    lastNavi=null;naviMovementObserved=false
-    if(sdkReplay!=null) {
-     if(event.component.startsWith("FusedLocation") || event.component=="FUSED_LOCATION") {
-      sdkReplay?.reset();presentSdkReplay(SdkRouteReplayResult(SdkRouteReplayState.INVALID),"failure")
-     }
-     record("sdk",data);return
-    }
-    if(!ui.simulation) {clearPresentation();liveGuidance.setAvailable(false);liveInputAvailable=false;ui=ui.copy(phase="연결 확인 중",title="위치 정보를 기다립니다",message="연결이 확인되면 지원 구간을 살펴봅니다.",detail="정차 중 가상 구간 체험을 이용할 수 있습니다.")}
-   }
-   is SourceEvent.RouteBoundary -> {
-    // SDK reader instances have local counters. The coordinator outlives those instances.
-    routeGeneration++;lastNavi=null;naviMovementObserved=false
-    liveGuidance.onRouteChanged(routeGeneration)
-    if(!ui.simulation && sdkReplay==null) clearPresentation()
-    data.put("generation",routeGeneration).put("readerGeneration",event.generation).put("reason",event.reason)
-   }
+   is SourceEvent.Connection -> handleConnection(event,data)
+   is SourceEvent.Failure -> if(handleFailure(event,data)) return
+   is SourceEvent.RouteBoundary -> handleRouteBoundary(event,data)
    is SourceEvent.SubscriptionCount -> data.put("count",event.count)
    is SourceEvent.RouteState -> data.put("routing",event.routing).put("mode",event.mode)
   }
   record("sdk",data)
+ }
+
+ private fun handleLocation(event:SourceEvent.Location,data:JSONObject):Boolean {
+  val p=event.sample
+  data.put("routeId",p.routeId).put("currentRouteIndex",p.currentRouteIndex).put("provider",p.provider.name).put("latitude",p.latitude).put("longitude",p.longitude).put("heading",p.heading).put("measuredTime",p.measuredTimeMillis).put("receivedElapsedMillis",p.receivedElapsedMillis).put("confidence",p.confidence).put("selected",event.selectedForPosition)
+  locationContext.observe(p)
+  if(!event.selectedForPosition || ui.simulation) return false
+
+  locationUnsupported=false
+  if(!liveInputAvailable) {liveGuidance.setAvailable(true);liveInputAvailable=true}
+  val now=SystemClock.elapsedRealtime();val wall=System.currentTimeMillis()
+  val selected=locationContext.select(p,now,wall)
+  val replay=sdkReplay
+  if(replay!=null) {
+   replay.count++;replay.lastPoint=selected.point;replay.lastHeading=p.heading
+   val replayResult=replay.gate.update(SdkRouteReplaySample(selected.point,p.heading,
+    if(selected.clockValidated) selected.measuredElapsedMs else null,p.receivedElapsedMillis),now)
+   data.put("inputOrigin","EMULATOR_GPS").put("testRoute",replay.road.id)
+   record("sdk",data)
+   presentSdkReplay(replayResult,"sdk")
+   return true
+  }
+  val result=liveGuidance.update(selected.liveInput,now,wall)
+  presentLive(result)
+  ui=ui.copy(diagnostic="${p.provider}: ${locationContext.locationCount} samples; moved=${locationContext.moved}; ${result.status}")
+  return false
+ }
+
+ private fun handleConnection(event:SourceEvent.Connection,data:JSONObject) {
+  data.put("component",event.component).put("state",event.state)
+  if(event.component=="FusedLocation" && event.state=="NO_LOCATION" && sdkReplay!=null) {
+   sdkReplay?.reset();presentSdkReplay(SdkRouteReplayResult(SdkRouteReplayState.INVALID),"no_location")
+  }
+  if(event.component=="FusedLocation" && event.state=="UNSUPPORTED" && !ui.simulation) {
+   locationUnsupported=true
+   liveInputAvailable=false
+   locationContext.clearNavigation()
+   liveGuidance.setAvailable(false)
+   if(sdkReplay!=null) {sdkReplay?.reset();presentSdkReplay(SdkRouteReplayResult(SdkRouteReplayState.INVALID),"unsupported")}
+   else presentLive(liveGuidance.tick(SystemClock.elapsedRealtime(),System.currentTimeMillis()))
+  }
+ }
+
+ private fun handleFailure(event:SourceEvent.Failure,data:JSONObject):Boolean {
+  data.put("component",event.component).put("code",event.code).put("detail",event.detail)
+  locationContext.clearNavigation()
+  if(sdkReplay!=null) {
+   if(event.component.startsWith("FusedLocation") || event.component=="FUSED_LOCATION") {
+    sdkReplay?.reset();presentSdkReplay(SdkRouteReplayResult(SdkRouteReplayState.INVALID),"failure")
+   }
+   record("sdk",data)
+   return true
+  }
+  if(!ui.simulation) {
+   clearPresentation();liveGuidance.setAvailable(false);liveInputAvailable=false
+   ui=ui.copy(phase="연결 확인 중",title="위치 정보를 기다립니다",message="연결이 확인되면 지원 구간을 살펴봅니다.",detail="정차 중 가상 구간 체험을 이용할 수 있습니다.")
+  }
+  return false
+ }
+
+ private fun handleRouteBoundary(event:SourceEvent.RouteBoundary,data:JSONObject) {
+  val generation=locationContext.onRouteBoundary()
+  liveGuidance.onRouteChanged(generation)
+  if(!ui.simulation && sdkReplay==null) clearPresentation()
+  data.put("generation",generation).put("readerGeneration",event.generation).put("reason",event.reason)
  }
  private fun record(event:String, data:JSONObject) {
   if(!BuildConfig.DEBUG) return
@@ -295,44 +284,12 @@ class RoadViewModel(application: Application, savedStateHandle: SavedStateHandle
   Log.i("RoadContext",row)
   writer.append(row)
  }
- private fun locationSeparation(a:SourceLocation,b:SourceLocation):Double {
-  val result=FloatArray(1)
-  android.location.Location.distanceBetween(a.latitude,a.longitude,b.latitude,b.longitude,result)
-  return result[0].toDouble()
- }
  private fun clearPresentation() {
-  ui=ui.copy(showDiagram=false,diagramModel=null,distance=null,phase="안내 대기",
-   title="위치와 경로를 확인하고 있습니다",message="정보가 확인되면 구조 안내를 이어갑니다.")
+  ui=RoadGuidancePresentation.clear(ui)
  }
  internal fun presentLive(result:LiveGuidanceResult) {
   if(ui.simulation || ui.setup || sdkReplay!=null) return
-  if(locationUnsupported) {
-   clearPresentation()
-   ui=ui.copy(phase="위치 기능 미지원",title="이 차량에서는 위치 안내를 사용할 수 없습니다",
-    message="현재 환경이 필요한 위치 기능을 지원하지 않습니다.",
-    detail="정차 중 가상 구간 체험을 이용할 수 있습니다.")
-   return
-  }
-  val entry=result.entry
-  if(result.displayable && entry!=null) {
-   val approaching=result.decision?.state==GuidanceState.APPROACHING
-   ui=ui.copy(showDiagram=true,inputSource=DiagramSource.REAL_SDK,
-    diagramModel=DiagramModel(if(entry.mergeSide==dev.pleos.roadcontext.data.MergeSide.LEFT) MergeSide.LEFT else MergeSide.RIGHT,DiagramSource.REAL_SDK,entry.segment.id,false,true),
-    phase=if(approaching) "합류 구간 접근" else "미리 보는 도로 구조",
-    title=if(approaching) "앞에서 차로가 합쳐집니다" else "진입 차로는 앞까지 이어집니다",
-    message=if(approaching) "진입 차로가 끝에서 본선과 연결됩니다." else "진입 차로가 끝부분에서 본선과 연결됩니다.",
-    detail="도로 구조 설명이며 현재 차로와 합류 가능 여부는 판단하지 않습니다.",
-    distance=result.decision?.distanceToMergeMeters?.takeIf {it>0}?.let {"약 ${it.toInt()}m 앞"})
-  } else {
-   clearPresentation()
-   ui=ui.copy(phase="안내 대기",title=when(result.status) {
-    LiveGuidanceStatus.NO_APPROVED_ROADS -> "도로 구조 자료를 준비하고 있습니다"
-    LiveGuidanceStatus.CATALOG_REJECTED,LiveGuidanceStatus.EVIDENCE_INVALID -> "도로 자료를 확인하고 있습니다"
-    LiveGuidanceStatus.PASSED -> "합류 구간을 지났습니다"
-    else -> "위치와 경로를 확인하고 있습니다"
-   },message=if(result.status==LiveGuidanceStatus.NO_APPROVED_ROADS) "검증된 구간에서만 구조를 안내합니다." else "정보가 확인되면 구조 안내를 이어갑니다.",
-    detail="정차 중 가상 구간 체험을 이용할 수 있습니다.")
-  }
+  ui=RoadGuidancePresentation.live(ui,result,locationUnsupported)
  }
  override fun onCleared() { stop();writer.close();super.onCleared() }
 }
