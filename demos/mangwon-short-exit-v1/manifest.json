@@ -1,16 +1,23 @@
 {
-  "acceptedDate": "2026-11-15",
-  "status": "user-accepted-preserve-unchanged",
-  "files": [
-    {
-      "file": "comparison.mp4",
-      "source": "verification/runs/mangwon-markings-comparison-07/mangwon-markings-comparison-audible.mp4",
-      "sha256": "9c72f9a7d336fdd3a97cb9e1be9491d2180b79a9cf01387984a1d61a0dcef9c1"
+  "refreshedDate": "2026-11-15",
+  "kakaoSource": "Archived mobile KakaoNavi footage and captured voice from the previous approved comparison; no new Kakao run",
+  "ourSource": "verification/runs/demo-refresh-20261115/mangwon/ours/our-app.mp4",
+  "sourceGps": "verification/runs/kakao-context-03/case-b-ko2/gps.jsonl",
+  "sourceGpsSha256": "027aa1d2453561c0328b23756a24c811d00dde1b79818dd2931d836c089019b3",
+  "apkSha256": "b55b639afa413ead067e36242db50b7e8000fe92b61ffa325470ab9f3f15e574",
+  "gitCommitAtCapture": "ef13c49c7164d55b6ac1b55f88186ba86f443b8f",
+  "matchedGpsSamples": 141,
+  "alignment": "Approximate replay timeline alignment, not a response-latency measurement",
+  "galleryIntroSeconds": 4.0,
+  "bottomCommentary": false,
+  "files": {
+    "comparison": {
+      "sha256": "78150aa2a3e7f75211d9933b2ccdd9df42a503d7e70cbb14259bcf9a49aabd08",
+      "durationSeconds": 136.005011
     },
-    {
-      "file": "highlights.mp4",
-      "source": "verification/runs/mangwon-markings-comparison-07/mangwon-markings-highlights-audible.mp4",
-      "sha256": "e8e0c45696a6248f268296e7f81596dd5c17f4d07fdab2a917412b9266f7cd5c"
+    "highlights": {
+      "sha256": "ba3f5020b95ceb6d579515a301fdadd7cae48c757294c87bd771b642f5c018d0",
+      "durationSeconds": 76.005011
     }
-  ]
+  }
 }

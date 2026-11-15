@@ -1,0 +1,23 @@
+{
+  "refreshedDate": "2026-11-15",
+  "kakaoSource": "Archived mobile KakaoNavi footage and captured voice from the previous approved comparison; no new Kakao run",
+  "ourSource": "verification/runs/demo-refresh-20261115/eungbong/ours-v2/our-app.mp4",
+  "sourceGps": "verification/runs/eungbong-two-lanes-17/gps.jsonl",
+  "sourceGpsSha256": "8d97f09292d43d6b6519c0b291f9b9814407f9a109dbeaa4cec729fd8d4f23be",
+  "apkSha256": "b55b639afa413ead067e36242db50b7e8000fe92b61ffa325470ab9f3f15e574",
+  "gitCommitAtCapture": "ef13c49c7164d55b6ac1b55f88186ba86f443b8f",
+  "matchedGpsSamples": 128,
+  "alignment": "Approximate replay timeline alignment, not a response-latency measurement",
+  "galleryIntroSeconds": 4.0,
+  "bottomCommentary": false,
+  "files": {
+    "comparison": {
+      "sha256": "9dc19d9ad7b24cfc68c036e69c27d536fa8489bdd529039297cb5b939b50548d",
+      "durationSeconds": 134.266667
+    },
+    "highlights": {
+      "sha256": "617a6381c4d0a1b67e066eb5ad0cef0788a8b89c4efbe1dcb060107bbac6df03",
+      "durationSeconds": 124.266667
+    }
+  }
+}

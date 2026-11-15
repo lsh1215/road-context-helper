@@ -12,10 +12,10 @@
 
 | 구간 | 보여주는 정보 | 영상 |
 |---|---|---|
-| 응봉지하차도 출구 | 두 진입 차로가 순서대로 끝나는 구조와 각 끝까지 남은 거리 | [핵심 2분](demos/eungbong-two-lanes-v4/highlights.mp4) · [전체](demos/eungbong-two-lanes-v4/comparison.mp4) |
-| 망원 합류·진출 | 합류 후 실선 구간과 차로 변경 가능한 구간을 구분해 가까운 진출 준비 | [핵심 1분 12초](demos/mangwon-short-exit-v1/highlights.mp4) · [전체](demos/mangwon-short-exit-v1/comparison.mp4) |
+| 응봉지하차도 출구 | 두 진입 차로가 순서대로 끝나는 구조와 각 끝까지 남은 거리 | [핵심 2분 4초](demos/eungbong-two-lanes-v4/highlights.mp4) · [전체 2분 14초](demos/eungbong-two-lanes-v4/comparison.mp4) |
+| 망원 합류·진출 | 합류 후 실선 구간과 차로 변경 가능한 구간을 구분해 가까운 진출 준비 | [핵심 1분 16초](demos/mangwon-short-exit-v1/highlights.mp4) · [전체 2분 16초](demos/mangwon-short-exit-v1/comparison.mp4) |
 
-두 비교 영상은 각 사례의 동일 GPS 경로를 모바일 카카오내비와 우리 앱에 재생한 에뮬레이터 녹화입니다.
+두 비교 영상은 각 사례의 동일 GPS 경로를 모바일 카카오내비와 초행길에 별도로 재생한 화면입니다. 초행길 화면은 최신 앱으로 다시 촬영했고, 카카오내비 화면과 음성은 앞서 녹화한 원본을 사용했습니다. 첫 4초는 정차 중 도로 유형 시연입니다. 화면은 주행 시점에 맞춰 대략 정렬했으며 반응속도 비교는 아닙니다.
 
 ## 주요 기능
 
